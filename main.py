@@ -112,7 +112,7 @@ def deleteFlavor(flavorID: int) -> dict[str, IceCreamFlavor]:
     return {"deleted": flavor}
 
 #start prometheus server
-start_http_server(8001)
+start_http_server(8000)
 
 
 
