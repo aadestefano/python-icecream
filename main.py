@@ -1,6 +1,6 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from pydantic import BaseModel
-from prometheus_client import Counter, start_http_server
+from prometheus_client import Counter, generate_latest, REGISTRY
 
 
 app = FastAPI()
@@ -111,8 +111,9 @@ def deleteFlavor(flavorID: int) -> dict[str, IceCreamFlavor]:
     flavor = flavors.pop(flavorID)
     return {"deleted": flavor}
 
-#start prometheus server
-start_http_server(8000)
+@app.get("/metrics")
+async def metrics():
+    return Response(content=generate_latest(REGISTRY), media_type="text/plain")
 
 
 
