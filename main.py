@@ -1,5 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
+from prometheus_client import Counter, start_http_server
+
 
 app = FastAPI()
 
@@ -15,6 +17,17 @@ flavors = {
     1: IceCreamFlavor(flavorName="Lemon Sherbet", flavorDesc="Tangy", flavorPrice=2.50, flavorQuantity=50, flavorID=1 ),
     2: IceCreamFlavor(flavorName="Vanilla", flavorDesc="Classic", flavorPrice=1.00, flavorQuantity=200, flavorID=2 ),
 }
+
+# define endpoint counter
+endpoint_counter = Counter("endpoint_usage_total", "Total number of endpoint requests", ["endpoint"])
+
+@app.middleware("http")
+async def count_requests(request: Request, call_next):
+    """middleware to count endpoint reqs."""
+    response = await call_next(request)
+    endpoint_counter.labels(endpoint=request.url.path).inc()
+    return response
+
 
 @app.get("/")
 def index() -> dict[str, dict[int, IceCreamFlavor]]:
@@ -97,6 +110,10 @@ def deleteFlavor(flavorID: int) -> dict[str, IceCreamFlavor]:
         )
     flavor = flavors.pop(flavorID)
     return {"deleted": flavor}
+
+#start prometheus server
+start_http_server(8001)
+
 
 
 
